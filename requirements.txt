@@ -1,0 +1,8 @@
+Django
+psycopg2-binary
+django-environ
+mongoengine
+pymongo[srv]
+passlib
+beautifulsoup4
+requests
