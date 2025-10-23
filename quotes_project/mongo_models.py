@@ -1,22 +1,26 @@
-from mongoengine import Document, StringField, ListField, ReferenceField
+from mongoengine import Document, CASCADE
+from mongoengine.fields import StringField, ListField, ReferenceField, BooleanField, EmailField
 
 
 class Author(Document):
-    fullname = StringField(required=True, unique=True, max_length=150)
-    born_date = StringField(max_length=50)
-    born_location = StringField(max_length=150)
+    fullname = StringField(required=True, unique=True)
+    born_date = StringField()
+    born_location = StringField()
     description = StringField()
-
-    meta = {
-        'collection': 'authors'
-    }
+    meta = {'collection': 'authors'}
 
 
 class Quote(Document):
-    quote = StringField(required=True)
-    tags = ListField(StringField(max_length=50))
-    author = ReferenceField(Author, required=True)
+    tags = ListField(StringField())
+    author = ReferenceField(Author, reverse_delete_rule=CASCADE)
+    quote = StringField(required=True, unique=True)
+    meta = {'collection': 'quotes'}
 
-    meta = {
-        'collection': 'quotes'
-    }
+
+class Contact(Document):
+    fullname = StringField(required=True)
+    email = EmailField(required=True, unique=True)
+    phone_number = StringField()
+    message_sent = BooleanField(default=False)
+    preferred_method = StringField(choices=('email', 'sms'), default='email')
+    meta = {'collection': 'contacts'}

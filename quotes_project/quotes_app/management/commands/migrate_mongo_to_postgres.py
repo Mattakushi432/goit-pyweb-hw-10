@@ -3,14 +3,7 @@ from pathlib import Path
 from django.core.management.base import BaseCommand
 from mongoengine import connect
 
-try:
-    from quotes_app.models import Author as PgAuthor, Quote as PgQuote, Tag as PgTag
-except ModuleNotFoundError:
-    import sys
-    from pathlib import Path as _Path
-    _PROJECT_DIR = _Path(__file__).resolve().parent.parent.parent.parent  # quotes_project directory (contains quotes_app)
-    sys.path.insert(0, str(_PROJECT_DIR))
-    from quotes_app.models import Author as PgAuthor, Quote as PgQuote, Tag as PgTag
+# Django models will be imported inside the command handler after Django is set up.
 
 
 try:
@@ -27,7 +20,8 @@ class Command(BaseCommand):
     help = 'Migrates data from MongoDB to PostgreSQL'
 
     def handle(self, *args, **options):
-
+        # Import Django models after settings are configured.
+        from quotes_app.models import Author as PgAuthor, Quote as PgQuote, Tag as PgTag
 
         # Ищем config.ini рядом с manage.py (в папке quotes_project)
         BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
@@ -93,3 +87,24 @@ class Command(BaseCommand):
                 pg_quote.tags.set(tags)
 
         self.stdout.write(self.style.SUCCESS(f'Миграция цитат ({mongo_quotes.count()}) завершена.'))
+
+
+if __name__ == "__main__":
+    # Allow running this script directly (outside of Django manage.py)
+    import os
+    import sys
+    import django
+    from pathlib import Path as _Path
+
+    # Add the Django project directory (where manage.py lives) to sys.path
+    _BASE_DIR = _Path(__file__).resolve().parent.parent.parent.parent
+    if str(_BASE_DIR) not in sys.path:
+        sys.path.insert(0, str(_BASE_DIR))
+
+    # Configure Django settings and initialize
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "quotes_project.settings")
+    django.setup()
+
+    # Execute this management command
+    from django.core.management import call_command
+    call_command("migrate_mongo_to_postgres")
